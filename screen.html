@@ -10,7 +10,7 @@
 <style>
 body {
   margin: 0;
-  background: #000;
+  background: #f5efe6; /* สีครีม */
   font-family: 'Kanit', sans-serif;
   overflow: hidden;
 }
@@ -21,11 +21,14 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 64px;
-  font-weight: bold;
+  font-size: 56px;
+  font-weight: 600;
   color: #ffffff;
-  text-align: center;
-  animation: fadeText 2.5s ease-in-out infinite;
+  background: rgba(180, 150, 120, 0.85);
+  padding: 30px 60px;
+  border-radius: 80px;
+  white-space: nowrap; /* บรรทัดเดียว */
+  animation: fadeText 2.8s ease-in-out infinite;
 }
 
 /* ภาพลายเซ็น */
@@ -33,17 +36,17 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 85%;
+  max-height: 85%;
   transform: translate(-50%, -50%);
   display: none;
 }
 
 /* fade ข้อความ */
 @keyframes fadeText {
-  0% { opacity: 0.3; }
+  0% { opacity: 0.4; }
   50% { opacity: 1; }
-  100% { opacity: 0.3; }
+  100% { opacity: 0.4; }
 }
 
 /* pulse ตอนมีลายเซ็นใหม่ */
@@ -73,7 +76,7 @@ const img = document.getElementById("signatureImage");
 
 let lastCount = 0;
 
-/* แสดงโหมดรอ */
+/* โหมดรอ */
 function showWaiting() {
   waitingText.style.display = "block";
   img.style.display = "none";
@@ -85,13 +88,12 @@ function showSignature(imageData) {
   img.style.display = "block";
   img.src = imageData;
 
-  // trigger animation
   img.classList.remove("new-signature");
   void img.offsetWidth;
   img.classList.add("new-signature");
 }
 
-/* ตรวจลายเซ็นใหม่ */
+/* ตรวจลายเซ็น */
 function checkSignature() {
   const signatures = JSON.parse(localStorage.getItem("signatures")) || [];
 
@@ -101,7 +103,6 @@ function checkSignature() {
     return;
   }
 
-  // มีลายเซ็นใหม่
   if (signatures.length !== lastCount) {
     showSignature(signatures[signatures.length - 1]);
     lastCount = signatures.length;
@@ -111,9 +112,5 @@ function checkSignature() {
 /* เริ่มต้น */
 showWaiting();
 
-/* ตรวจทุก 1 วินาที */
-setInterval(checkSignature, 1000);
-</script>
-
-</body>
-</html>
+/* ตรวจทุก 1 วิ */
+setInterval(checkSignature, 1
