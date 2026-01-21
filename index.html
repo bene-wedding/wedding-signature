@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>เขียนคำอวยพร</title>
+<title>Bene Wedding Project</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://fonts.googleapis.com/css?family=Sarabun&display=swap" rel="stylesheet">
@@ -14,18 +14,14 @@ body{
   text-align:center;
   margin:0;
 }
-h1{
-  margin:16px 0 4px;
-}
+h1{ margin:16px 0 4px; }
 canvas{
   border:2px solid #000;
   background:#fff;
-  touch-action:none; /* สำคัญมาก */
-  cursor: crosshair;
+  touch-action:none;
+  cursor:crosshair;
 }
-.controls{
-  margin:10px 0;
-}
+.controls{ margin:10px 0; }
 button,select{
   font-size:16px;
   padding:6px 12px;
@@ -36,7 +32,7 @@ button,select{
 <body>
 
 <h1>เขียนคำอวยพรให้บ่าวสาว</h1>
-<p>ใช้ปากกา / นิ้ว / เมาส์ ได้ทั้งหมด</p>
+<p>ใช้ปากกา / นิ้ว / เมาส์ ได้</p>
 
 <canvas id="canvas" width="900" height="600"></canvas>
 
@@ -69,14 +65,16 @@ const SUPABASE_URL="https://ntyqqenchkojmhfyaegx.supabase.co";
 const SUPABASE_ANON_KEY="YOUR_PUBLISHABLE_KEY";
 const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-// Canvas
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
+// ===== Canvas =====
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const colorEl = document.getElementById("color");
+const widthEl = document.getElementById("width");
 
 let drawing=false;
 let lastX=0,lastY=0;
 
-// Pointer Events (รองรับทุกอุปกรณ์)
+// ===== Pointer Events (รองรับ iPad + Notebook) =====
 canvas.addEventListener("pointerdown",e=>{
   drawing=true;
   canvas.setPointerCapture(e.pointerId);
@@ -87,8 +85,8 @@ canvas.addEventListener("pointerdown",e=>{
 canvas.addEventListener("pointermove",e=>{
   if(!drawing) return;
 
-  ctx.strokeStyle=color.value;
-  ctx.lineWidth=width.value;
+  ctx.strokeStyle = colorEl.value;
+  ctx.lineWidth = widthEl.value;
   ctx.lineCap="round";
   ctx.lineJoin="round";
 
@@ -109,17 +107,16 @@ function stopDraw(){
   drawing=false;
 }
 
-// ล้าง
+// ===== ล้าง =====
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// บันทึก
+// ===== บันทึก =====
 async function saveCanvas(){
   const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
   const filename = `signature_${Date.now()}.png`;
 
-  // upload ไป storage
   await supabase.storage
     .from("signatures")
     .upload(filename, blob, { upsert:true });
@@ -128,7 +125,6 @@ async function saveCanvas(){
     .from("signatures")
     .getPublicUrl(filename);
 
-  // insert db
   await supabase.from("signatures").insert({
     image_url: data.publicUrl
   });
@@ -137,5 +133,6 @@ async function saveCanvas(){
   alert("ส่งลายเซ็นเรียบร้อย ✍️");
 }
 </script>
+
 </body>
 </html>
