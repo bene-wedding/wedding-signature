@@ -2,82 +2,184 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>เขียนคำอวยพร</title>
+<title>เขียนคำอวยพร | BENE Wedding Project</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link href="https://fonts.googleapis.com/css?family=Sarabun&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body{
-  font-family:Sarabun,sans-serif;
-  background:#fafafa;
-  text-align:center;
-  margin:0;
+:root{
+  --cream:#f6f1e9;
+  --cream-dark:#e9e1d6;
+  --brown:#5b4636;
+  --accent:#b08a5a;
 }
-h1{ margin:16px 0 4px; }
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Sarabun,sans-serif;
+  background:var(--cream);
+  color:var(--brown);
+  display:flex;
+  justify-content:center;
+}
+
+.container{
+  max-width:980px;
+  width:100%;
+  padding:20px;
+}
+
+header{
+  text-align:center;
+  margin-bottom:14px;
+}
+
+header h1{
+  margin:0;
+  font-weight:600;
+  letter-spacing:1px;
+}
+
+header p{
+  margin:6px 0 0;
+  font-size:14px;
+  opacity:.8;
+}
+
+/* ===== Canvas Card ===== */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
 canvas{
-  border:2px solid #000;
+  width:100%;
+  height:auto;
+  aspect-ratio: 3 / 2;
+  border:2px dashed var(--cream-dark);
+  border-radius:12px;
   background:#fff;
   touch-action:none;
   cursor:crosshair;
 }
-.controls{ margin:10px 0; }
-button,select{
-  font-size:16px;
-  padding:6px 12px;
-  margin:4px;
+
+/* ===== Controls ===== */
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  justify-content:center;
+  margin-top:14px;
+}
+
+.control-group{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+select,button{
+  font-family:inherit;
+  font-size:15px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid var(--cream-dark);
+  background:#fff;
+  cursor:pointer;
+}
+
+button.primary{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+}
+
+button.danger{
+  background:#eee;
+}
+
+footer{
+  text-align:center;
+  margin-top:14px;
+  font-size:12px;
+  opacity:.6;
+}
+
+/* Mobile */
+@media(max-width:600px){
+  header h1{font-size:20px}
 }
 </style>
 </head>
 <body>
 
-<h1>เขียนคำอวยพรให้บ่าวสาว</h1>
-<p>ใช้ปากกา / นิ้ว / เมาส์ ได้ทั้งหมด</p>
+<div class="container">
 
-<canvas id="canvas" width="900" height="600"></canvas>
+  <header>
+    <h1>เขียนคำอวยพรให้บ่าวสาว</h1>
+    <p>เชิญเขียนด้วยใจ 💛</p>
+  </header>
 
-<div class="controls">
-  สี:
-  <select id="color">
-    <option value="black">ดำ</option>
-    <option value="blue" selected>น้ำเงิน</option>
-    <option value="red">แดง</option>
-    <option value="green">เขียว</option>
-  </select>
+  <div class="card">
+    <canvas id="canvas" width="900" height="600"></canvas>
 
-  ความหนา:
-  <select id="width">
-    <option value="6">6</option>
-    <option value="8" selected>8</option>
-    <option value="12">12</option>
-  </select>
+    <div class="controls">
+      <div class="control-group">
+        สี:
+        <select id="color">
+          <option value="#2f2f2f">ดำ</option>
+          <option value="#2b5fb8" selected>น้ำเงิน</option>
+          <option value="#c0392b">แดง</option>
+          <option value="#1e8449">เขียว</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        ความหนา:
+        <select id="width">
+          <option value="6">บาง</option>
+          <option value="8" selected>ปกติ</option>
+          <option value="12">หนา</option>
+        </select>
+      </div>
+
+      <button class="danger" onclick="clearCanvas()">ล้าง</button>
+      <button class="primary" onclick="saveCanvas()">ส่งขึ้นจอ</button>
+    </div>
+  </div>
+
+  <footer>
+    By BENE Wedding Project
+  </footer>
+
 </div>
 
-<div class="controls">
-  <button onclick="clearCanvas()">ล้าง</button>
-  <button onclick="saveCanvas()">ส่งขึ้นจอ</button>
-</div>
-
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* ===== Supabase config ===== */
 const SUPABASE_URL = "https://ntyqqenchkojmhfyaegx.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_NRo3h3EI9GBoZQJ5n4gOSg_waxkqG-N";
+const SUPABASE_ANON_KEY = "PUT_YOUR_PUBLISHABLE_KEY_HERE";
 
 const supabase = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
 
-// ===== Canvas =====
+/* ===== Canvas ===== */
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const color = document.getElementById("color");
-const width = document.getElementById("width");
+const colorEl = document.getElementById("color");
+const widthEl = document.getElementById("width");
 
 let drawing=false;
 let lastX=0,lastY=0;
 
-// Pointer Events
 canvas.addEventListener("pointerdown",e=>{
   drawing=true;
   canvas.setPointerCapture(e.pointerId);
@@ -88,8 +190,8 @@ canvas.addEventListener("pointerdown",e=>{
 canvas.addEventListener("pointermove",e=>{
   if(!drawing) return;
 
-  ctx.strokeStyle = color.value;
-  ctx.lineWidth = width.value;
+  ctx.strokeStyle=colorEl.value;
+  ctx.lineWidth=widthEl.value;
   ctx.lineCap="round";
   ctx.lineJoin="round";
 
@@ -102,34 +204,31 @@ canvas.addEventListener("pointermove",e=>{
   lastY=e.offsetY;
 });
 
-canvas.addEventListener("pointerup",()=>drawing=false);
-canvas.addEventListener("pointercancel",()=>drawing=false);
-canvas.addEventListener("pointerleave",()=>drawing=false);
+["pointerup","pointercancel","pointerleave"].forEach(ev=>{
+  canvas.addEventListener(ev,()=>drawing=false);
+});
 
-// ล้าง
+/* ===== Actions ===== */
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// บันทึก
 async function saveCanvas(){
   const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
   const filename = `signature_${Date.now()}.png`;
 
-  await supabase.storage
+  const { error } = await supabase
+    .storage
     .from("signatures")
     .upload(filename, blob, { upsert:true });
 
-  const { data } = supabase.storage
-    .from("signatures")
-    .getPublicUrl(filename);
-
-  await supabase.from("signatures").insert({
-    image_url: data.publicUrl
-  });
+  if(error){
+    alert("อัปโหลดไม่สำเร็จ");
+    return;
+  }
 
   clearCanvas();
-  alert("ส่งลายเซ็นเรียบร้อย ✍️");
+  alert("ส่งคำอวยพรเรียบร้อย ✍️");
 }
 </script>
 
