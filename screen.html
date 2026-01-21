@@ -1,90 +1,118 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>BENE Wedding Screen</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Screen</title>
 
 <link href="https://fonts.googleapis.com/css?family=Kanit&display=swap" rel="stylesheet">
 
 <style>
-    body {
-        margin: 0;
-        font-family: 'Kanit', sans-serif;
-        background: #0081c5;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+body {
+  margin: 0;
+  background: #000;
+  font-family: 'Kanit', sans-serif;
+  overflow: hidden;
+}
 
-    #img_viewer {
-        max-width: 100vw;
-        max-height: 100vh;
-        object-fit: contain;
-        background: #fff;
-        padding: 30px;
-        border-radius: 30px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-        opacity: 0;
-        transition: opacity 0.5s ease;
-    }
+/* ข้อความรอ */
+#waitingText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 64px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  animation: fadeText 2.5s ease-in-out infinite;
+}
 
-    #hint {
-        position: fixed;
-        bottom: 12px;
-        right: 20px;
-        color: rgba(255,255,255,0.7);
-        font-size: 14px;
-        letter-spacing: 1px;
-    }
+/* ภาพลายเซ็น */
+#signatureImage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: 90%;
+  max-height: 90%;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+
+/* fade ข้อความ */
+@keyframes fadeText {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* pulse ตอนมีลายเซ็นใหม่ */
+.new-signature {
+  animation: pulse 1s ease-in-out 2;
+}
+
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.05); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
 </style>
 </head>
 
 <body>
 
-<img id="img_viewer" src="" alt="Wedding Message">
+<div id="waitingText">
+  เชิญเขียนอวยพรเจ้าบ่าวเจ้าสาว
+</div>
 
-<div id="hint">BENE Wedding Project</div>
+<img id="signatureImage" src="">
 
 <script>
-const viewer = document.getElementById("img_viewer");
-let lastImage = "";
+const waitingText = document.getElementById("waitingText");
+const img = document.getElementById("signatureImage");
 
-// รูปเริ่มต้น (ถ้ายังไม่มีใครเขียน)
-const DEFAULT_IMAGE = "";
+let lastCount = 0;
 
-// โหลดรูปจากหน้าเขียน
-function loadImage() {
-    const imgData = localStorage.getItem("weddingImage");
-
-    // ยังไม่มีข้อมูล
-    if (!imgData && DEFAULT_IMAGE) {
-        viewer.src = DEFAULT_IMAGE;
-        viewer.style.opacity = 1;
-        return;
-    }
-
-    // มีรูปใหม่
-    if (imgData && imgData !== lastImage) {
-        viewer.style.opacity = 0;
-
-        setTimeout(() => {
-            viewer.src = imgData;
-            viewer.style.opacity = 1;
-            lastImage = imgData;
-        }, 300);
-    }
+/* แสดงโหมดรอ */
+function showWaiting() {
+  waitingText.style.display = "block";
+  img.style.display = "none";
 }
 
-// โหลดครั้งแรก
-loadImage();
+/* แสดงลายเซ็น */
+function showSignature(imageData) {
+  waitingText.style.display = "none";
+  img.style.display = "block";
+  img.src = imageData;
 
-// เช็คทุก 1 วินาที (เกือบ real-time)
-setInterval(loadImage, 1000);
+  // trigger animation
+  img.classList.remove("new-signature");
+  void img.offsetWidth;
+  img.classList.add("new-signature");
+}
+
+/* ตรวจลายเซ็นใหม่ */
+function checkSignature() {
+  const signatures = JSON.parse(localStorage.getItem("signatures")) || [];
+
+  if (signatures.length === 0) {
+    showWaiting();
+    lastCount = 0;
+    return;
+  }
+
+  // มีลายเซ็นใหม่
+  if (signatures.length !== lastCount) {
+    showSignature(signatures[signatures.length - 1]);
+    lastCount = signatures.length;
+  }
+}
+
+/* เริ่มต้น */
+showWaiting();
+
+/* ตรวจทุก 1 วินาที */
+setInterval(checkSignature, 1000);
 </script>
 
 </body>
