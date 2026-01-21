@@ -1,234 +1,181 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<title>เขียนคำอวยพร | BENE Wedding Project</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BENE Wedding – เขียนคำอวยพร</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --cream:#f6f1e9;
-  --cream-dark:#e9e1d6;
-  --brown:#5b4636;
-  --accent:#b08a5a;
+  --cream:#f5efe6;
+  --brown:#7a5c42;
+  --accent:#b89b7b;
 }
-
-*{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family:Sarabun,sans-serif;
+  font-family:'Sarabun',sans-serif;
   background:var(--cream);
+  text-align:center;
   color:var(--brown);
+}
+
+h1{
+  margin:20px 0 6px;
+  font-size:34px;
+  font-weight:600;
+}
+
+.subtitle{
+  font-size:16px;
+  margin-bottom:14px;
+  opacity:.8;
+}
+
+/* canvas */
+.canvas-wrap{
   display:flex;
   justify-content:center;
 }
 
-.container{
-  max-width:980px;
-  width:100%;
-  padding:20px;
-}
-
-header{
-  text-align:center;
-  margin-bottom:14px;
-}
-
-header h1{
-  margin:0;
-  font-weight:600;
-  letter-spacing:1px;
-}
-
-header p{
-  margin:6px 0 0;
-  font-size:14px;
-  opacity:.8;
-}
-
-/* ===== Canvas Card ===== */
-.card{
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
 canvas{
-  width:100%;
-  height:auto;
-  aspect-ratio: 3 / 2;
-  border:2px dashed var(--cream-dark);
-  border-radius:12px;
   background:#fff;
+  border-radius:18px;
+  border:3px solid var(--accent);
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
   touch-action:none;
   cursor:crosshair;
 }
 
-/* ===== Controls ===== */
+/* controls */
 .controls{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  justify-content:center;
-  margin-top:14px;
-}
-
-.control-group{
-  display:flex;
-  align-items:center;
-  gap:6px;
+  margin:14px 0;
 }
 
 select,button{
-  font-family:inherit;
-  font-size:15px;
+  font-size:16px;
   padding:8px 14px;
-  border-radius:999px;
-  border:1px solid var(--cream-dark);
+  border-radius:20px;
+  border:none;
+  margin:4px;
+}
+
+select{
   background:#fff;
+  border:1px solid var(--accent);
+}
+
+button{
+  background:var(--brown);
+  color:#fff;
   cursor:pointer;
 }
 
-button.primary{
-  background:var(--accent);
-  color:#fff;
-  border:none;
+button.secondary{
+  background:#999;
 }
 
-button.danger{
-  background:#eee;
+button:hover{
+  opacity:.9;
 }
 
-footer{
-  text-align:center;
-  margin-top:14px;
-  font-size:12px;
-  opacity:.6;
-}
-
-/* Mobile */
-@media(max-width:600px){
-  header h1{font-size:20px}
+.footer{
+  margin:18px 0;
+  font-size:14px;
+  opacity:.7;
 }
 </style>
 </head>
 <body>
 
-<div class="container">
+<h1>เขียนคำอวยพรให้บ่าวสาว</h1>
+<div class="subtitle">ใช้ปากกา / นิ้ว / เมาส์ ได้</div>
 
-  <header>
-    <h1>เขียนคำอวยพรให้บ่าวสาว</h1>
-    <p>เชิญเขียนด้วยใจ 💛</p>
-  </header>
-
-  <div class="card">
-    <canvas id="canvas" width="900" height="600"></canvas>
-
-    <div class="controls">
-      <div class="control-group">
-        สี:
-        <select id="color">
-          <option value="#2f2f2f">ดำ</option>
-          <option value="#2b5fb8" selected>น้ำเงิน</option>
-          <option value="#c0392b">แดง</option>
-          <option value="#1e8449">เขียว</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        ความหนา:
-        <select id="width">
-          <option value="6">บาง</option>
-          <option value="8" selected>ปกติ</option>
-          <option value="12">หนา</option>
-        </select>
-      </div>
-
-      <button class="danger" onclick="clearCanvas()">ล้าง</button>
-      <button class="primary" onclick="saveCanvas()">ส่งขึ้นจอ</button>
-    </div>
-  </div>
-
-  <footer>
-    By BENE Wedding Project
-  </footer>
-
+<div class="canvas-wrap">
+  <canvas id="canvas" width="900" height="600"></canvas>
 </div>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="controls">
+  สี:
+  <select id="color">
+    <option value="#000000">ดำ</option>
+    <option value="#1e3a8a" selected>น้ำเงิน</option>
+    <option value="#b91c1c">แดง</option>
+    <option value="#166534">เขียว</option>
+  </select>
+
+  ความหนา:
+  <select id="width">
+    <option value="6">6</option>
+    <option value="8" selected>8</option>
+    <option value="12">12</option>
+  </select>
+</div>
+
+<div class="controls">
+  <button class="secondary" onclick="clearCanvas()">ล้าง</button>
+  <button onclick="saveCanvas()">บันทึกลายเซ็น</button>
+</div>
+
+<div class="footer">
+  By BENE Wedding Project
+</div>
+
 <script>
-/* ===== Supabase config ===== */
-const SUPABASE_URL = "https://ntyqqenchkojmhfyaegx.supabase.co";
-const SUPABASE_ANON_KEY = "PUT_YOUR_PUBLISHABLE_KEY_HERE";
-
-const supabase = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
-
-/* ===== Canvas ===== */
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const colorEl = document.getElementById("color");
 const widthEl = document.getElementById("width");
 
-let drawing=false;
-let lastX=0,lastY=0;
+let drawing = false;
+let lastX = 0;
+let lastY = 0;
 
-canvas.addEventListener("pointerdown",e=>{
-  drawing=true;
+/* ===== Pointer Events (เขียนติด 100%) ===== */
+canvas.addEventListener("pointerdown", e => {
+  drawing = true;
   canvas.setPointerCapture(e.pointerId);
-  lastX=e.offsetX;
-  lastY=e.offsetY;
+  lastX = e.offsetX;
+  lastY = e.offsetY;
 });
 
-canvas.addEventListener("pointermove",e=>{
-  if(!drawing) return;
+canvas.addEventListener("pointermove", e => {
+  if (!drawing) return;
 
-  ctx.strokeStyle=colorEl.value;
-  ctx.lineWidth=widthEl.value;
-  ctx.lineCap="round";
-  ctx.lineJoin="round";
+  ctx.strokeStyle = colorEl.value;
+  ctx.lineWidth = widthEl.value;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
   ctx.beginPath();
-  ctx.moveTo(lastX,lastY);
-  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(e.offsetX, e.offsetY);
   ctx.stroke();
 
-  lastX=e.offsetX;
-  lastY=e.offsetY;
+  lastX = e.offsetX;
+  lastY = e.offsetY;
 });
 
 ["pointerup","pointercancel","pointerleave"].forEach(ev=>{
   canvas.addEventListener(ev,()=>drawing=false);
 });
 
-/* ===== Actions ===== */
+/* ===== Clear ===== */
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-async function saveCanvas(){
-  const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
-  const filename = `signature_${Date.now()}.png`;
+/* ===== Save (โหมดเครื่องเดียว) ===== */
+function saveCanvas(){
+  const img = canvas.toDataURL("image/png");
 
-  const { error } = await supabase
-    .storage
-    .from("signatures")
-    .upload(filename, blob, { upsert:true });
+  // เก็บไว้ local ก่อน (เอาไปใช้หน้าแสดงผลได้)
+  localStorage.setItem("lastSignature", img);
 
-  if(error){
-    alert("อัปโหลดไม่สำเร็จ");
-    return;
-  }
-
+  alert("บันทึกลายเซ็นเรียบร้อย ✍️");
   clearCanvas();
-  alert("ส่งคำอวยพรเรียบร้อย ✍️");
 }
 </script>
 
