@@ -8,110 +8,141 @@
 <link href="https://fonts.googleapis.com/css?family=Kanit&display=swap" rel="stylesheet">
 
 <style>
-body {
-  margin: 0;
-  background: #f5efe6;
-  font-family: 'Kanit', sans-serif;
-  overflow: hidden;
+body{
+  margin:0;
+  background:#f5efe6;
+  font-family:'Kanit',sans-serif;
+  overflow:hidden;
+}
+
+/* กล่องรอ */
+#waitingBox{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
 }
 
 /* ข้อความรอ */
-#waitingText {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 56px;
-  font-weight: 600;
-  color: #ffffff;
-  background: rgba(180, 150, 120, 0.85);
-  padding: 30px 60px;
-  border-radius: 80px;
-  white-space: nowrap;
-  animation: fadeText 2.8s ease-in-out infinite;
+#waitingText{
+  font-size:56px;
+  font-weight:600;
+  color:#fff;
+  background:rgba(180,150,120,.9);
+  padding:28px 60px;
+  border-radius:80px;
+  white-space:nowrap;
+  animation:fade 3s ease-in-out infinite;
 }
 
-/* ภาพลายเซ็น */
-#signatureImage {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  max-width: 85%;
-  max-height: 85%;
-  transform: translate(-50%, -50%);
-  display: none;
+/* เครดิต */
+#credit{
+  margin-top:18px;
+  font-size:22px;
+  color:#9c8b7a;
 }
 
-/* animations */
-@keyframes fadeText {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
+/* รูปลายเซ็น */
+#signature{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  max-width:85%;
+  max-height:85%;
+  display:none;
 }
 
-.new-signature {
-  animation: pulse 1s ease-in-out 2;
+/* เอฟเฟกต์ */
+@keyframes fade{
+  0%{opacity:.4}
+  50%{opacity:1}
+  100%{opacity:.4}
 }
 
-@keyframes pulse {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.05); }
-  100% { transform: translate(-50%, -50%) scale(1); }
+.new-signature{
+  animation:pulse 1.2s ease-in-out 2;
+}
+@keyframes pulse{
+  0%{transform:translate(-50%,-50%) scale(1)}
+  50%{transform:translate(-50%,-50%) scale(1.05)}
+  100%{transform:translate(-50%,-50%) scale(1)}
 }
 </style>
 </head>
 
 <body>
 
-<div id="waitingText">
-  เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว
+<!-- โหมดรอ -->
+<div id="waitingBox">
+  <div id="waitingText">เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว</div>
+  <div id="credit">By BENE Wedding Project</div>
 </div>
 
-<img id="signatureImage" src="">
+<!-- ลายเซ็น -->
+<img id="signature">
 
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const STORAGE_KEY = "weddingSignatures";
-const waitingText = document.getElementById("waitingText");
-const img = document.getElementById("signatureImage");
+const SUPABASE_URL="https://ntyqqenchkojmhfyaegx.supabase.co";
+const SUPABASE_ANON_KEY="YOUR_PUBLISHABLE_KEY";
+const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-let lastCount = 0;
+// ===== ตั้งค่าเวลา =====
+const SHOW_TIME = 30000; // 30 วินาที (เปลี่ยนเป็น 60000 = 1 นาที)
+const CHECK_INTERVAL = 1500;
+
+const waitingBox=document.getElementById("waitingBox");
+const img=document.getElementById("signature");
+
+let lastId=null;
+let hideTimer=null;
 
 /* โหมดรอ */
-function showWaiting() {
-  waitingText.style.display = "block";
-  img.style.display = "none";
+function showWaiting(){
+  waitingBox.style.display="block";
+  img.style.display="none";
 }
 
 /* แสดงลายเซ็น */
-function showSignature(imageData) {
-  waitingText.style.display = "none";
-  img.style.display = "block";
-  img.src = imageData;
+function showSignature(url){
+  waitingBox.style.display="none";
+  img.style.display="block";
+  img.src=url;
 
   img.classList.remove("new-signature");
   void img.offsetWidth;
   img.classList.add("new-signature");
+
+  // ตั้งเวลาซ่อน
+  if(hideTimer) clearTimeout(hideTimer);
+  hideTimer=setTimeout(showWaiting, SHOW_TIME);
 }
 
-/* ตรวจลายเซ็น */
-function checkSignature() {
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+/* ตรวจลายเซ็นใหม่ */
+async function checkSignature(){
+  const { data } = await supabase
+    .from("signatures")
+    .select("id,image_url")
+    .order("created_at",{ascending:false})
+    .limit(1);
 
-  if (list.length === 0) {
+  if(!data || data.length===0){
     showWaiting();
-    lastCount = 0;
     return;
   }
 
-  if (list.length !== lastCount) {
-    showSignature(list[list.length - 1].img);
-    lastCount = list.length;
+  if(data[0].id!==lastId){
+    lastId=data[0].id;
+    showSignature(data[0].image_url);
   }
 }
 
 /* เริ่มต้น */
 showWaiting();
-setInterval(checkSignature, 1000);
+setInterval(checkSignature, CHECK_INTERVAL);
 </script>
 
 </body>
