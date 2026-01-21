@@ -10,7 +10,7 @@
 <style>
 body {
   margin: 0;
-  background: #f5efe6; /* สีครีม */
+  background: #f5efe6;
   font-family: 'Kanit', sans-serif;
   overflow: hidden;
 }
@@ -27,7 +27,7 @@ body {
   background: rgba(180, 150, 120, 0.85);
   padding: 30px 60px;
   border-radius: 80px;
-  white-space: nowrap; /* บรรทัดเดียว */
+  white-space: nowrap;
   animation: fadeText 2.8s ease-in-out infinite;
 }
 
@@ -42,14 +42,13 @@ body {
   display: none;
 }
 
-/* fade ข้อความ */
+/* animations */
 @keyframes fadeText {
   0% { opacity: 0.4; }
   50% { opacity: 1; }
   100% { opacity: 0.4; }
 }
 
-/* pulse ตอนมีลายเซ็นใหม่ */
 .new-signature {
   animation: pulse 1s ease-in-out 2;
 }
@@ -71,6 +70,7 @@ body {
 <img id="signatureImage" src="">
 
 <script>
+const STORAGE_KEY = "weddingSignatures";
 const waitingText = document.getElementById("waitingText");
 const img = document.getElementById("signatureImage");
 
@@ -95,23 +95,24 @@ function showSignature(imageData) {
 
 /* ตรวจลายเซ็น */
 function checkSignature() {
-  const signatures = JSON.parse(localStorage.getItem("signatures")) || [];
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-  if (signatures.length === 0) {
+  if (list.length === 0) {
     showWaiting();
     lastCount = 0;
     return;
   }
 
-  if (signatures.length !== lastCount) {
-    showSignature(signatures[signatures.length - 1]);
-    lastCount = signatures.length;
+  if (list.length !== lastCount) {
+    showSignature(list[list.length - 1].img);
+    lastCount = list.length;
   }
 }
 
 /* เริ่มต้น */
 showWaiting();
+setInterval(checkSignature, 1000);
+</script>
 
-/* ตรวจทุก 1 วิ */
-setInterval(checkSignature, 1
-
+</body>
+</html>
