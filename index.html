@@ -58,23 +58,23 @@ button,select{
   <button onclick="saveCanvas()">ส่งขึ้นจอ</button>
 </div>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// 🔑 Supabase
 const SUPABASE_URL="https://ntyqqenchkojmhfyaegx.supabase.co";
-const SUPABASE_ANON_KEY="YOUR_PUBLISHABLE_KEY";
+const SUPABASE_ANON_KEY="sb_publishable_NRo3h3EI9GBoZQJ5n4gOSg_waxkqG-N";
 const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 // ===== Canvas =====
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const colorEl = document.getElementById("color");
-const widthEl = document.getElementById("width");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const colorEl=document.getElementById("color");
+const widthEl=document.getElementById("width");
 
 let drawing=false;
 let lastX=0,lastY=0;
 
-// ===== Pointer Events (รองรับ iPad + Notebook) =====
+// Pointer Events
 canvas.addEventListener("pointerdown",e=>{
   drawing=true;
   canvas.setPointerCapture(e.pointerId);
@@ -85,8 +85,8 @@ canvas.addEventListener("pointerdown",e=>{
 canvas.addEventListener("pointermove",e=>{
   if(!drawing) return;
 
-  ctx.strokeStyle = colorEl.value;
-  ctx.lineWidth = widthEl.value;
+  ctx.strokeStyle=colorEl.value;
+  ctx.lineWidth=widthEl.value;
   ctx.lineCap="round";
   ctx.lineJoin="round";
 
@@ -99,34 +99,29 @@ canvas.addEventListener("pointermove",e=>{
   lastY=e.offsetY;
 });
 
-canvas.addEventListener("pointerup",stopDraw);
-canvas.addEventListener("pointercancel",stopDraw);
-canvas.addEventListener("pointerleave",stopDraw);
+canvas.addEventListener("pointerup",()=>drawing=false);
+canvas.addEventListener("pointercancel",()=>drawing=false);
+canvas.addEventListener("pointerleave",()=>drawing=false);
 
-function stopDraw(){
-  drawing=false;
-}
-
-// ===== ล้าง =====
+// ล้าง
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// ===== บันทึก =====
+// บันทึก
 async function saveCanvas(){
-  const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
-  const filename = `signature_${Date.now()}.png`;
+  const blob=await new Promise(r=>canvas.toBlob(r,"image/png"));
+  const filename=`signature_${Date.now()}.png`;
 
-  await supabase.storage
-    .from("signatures")
-    .upload(filename, blob, { upsert:true });
+  await supabase.storage.from("signatures")
+    .upload(filename,blob,{upsert:true});
 
   const { data } = supabase.storage
     .from("signatures")
     .getPublicUrl(filename);
 
   await supabase.from("signatures").insert({
-    image_url: data.publicUrl
+    image_url:data.publicUrl
   });
 
   clearCanvas();
