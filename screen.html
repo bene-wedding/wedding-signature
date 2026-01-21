@@ -1,148 +1,141 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Screen</title>
+<meta charset="utf-8">
+<title>Wedding Wishes Display</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link href="https://fonts.googleapis.com/css?family=Kanit&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body{
-  margin:0;
-  background:#f5efe6;
-  font-family:'Kanit',sans-serif;
-  overflow:hidden;
+:root{
+  --cream:#f6f1e9;
+  --brown:#5b4636;
+  --gold:#b08a5a;
 }
 
-/* กล่องรอ */
-#waitingBox{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Sarabun,sans-serif;
+  background:var(--cream);
+  color:var(--brown);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.wrapper{
+  width:100%;
+  height:100%;
+  padding:30px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+.message{
+  font-size:48px;
+  font-weight:600;
+  letter-spacing:2px;
   text-align:center;
 }
 
-/* ข้อความรอ */
-#waitingText{
-  font-size:56px;
-  font-weight:600;
-  color:#fff;
-  background:rgba(180,150,120,.9);
-  padding:28px 60px;
-  border-radius:80px;
-  white-space:nowrap;
-  animation:fade 3s ease-in-out infinite;
-}
-
-/* เครดิต */
-#credit{
-  margin-top:18px;
-  font-size:22px;
-  color:#9c8b7a;
-}
-
-/* รูปลายเซ็น */
-#signature{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  max-width:85%;
-  max-height:85%;
+.image-box{
+  max-width:90%;
+  max-height:80%;
   display:none;
 }
 
-/* เอฟเฟกต์ */
-@keyframes fade{
-  0%{opacity:.4}
-  50%{opacity:1}
-  100%{opacity:.4}
+.image-box img{
+  max-width:100%;
+  max-height:100%;
+  border-radius:24px;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
 }
 
-.new-signature{
-  animation:pulse 1.2s ease-in-out 2;
-}
-@keyframes pulse{
-  0%{transform:translate(-50%,-50%) scale(1)}
-  50%{transform:translate(-50%,-50%) scale(1.05)}
-  100%{transform:translate(-50%,-50%) scale(1)}
+footer{
+  position:fixed;
+  bottom:20px;
+  font-size:14px;
+  opacity:.6;
 }
 </style>
 </head>
-
 <body>
 
-<!-- โหมดรอ -->
-<div id="waitingBox">
-  <div id="waitingText">เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว</div>
-  <div id="credit">By BENE Wedding Project</div>
+<div class="wrapper">
+  <div id="text" class="message">
+    เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว
+  </div>
+
+  <div id="imageBox" class="image-box">
+    <img id="image" src="">
+  </div>
 </div>
 
-<!-- ลายเซ็น -->
-<img id="signature">
+<footer>
+  By BENE Wedding Project
+</footer>
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL="https://ntyqqenchkojmhfyaegx.supabase.co";
-const SUPABASE_ANON_KEY="YOUR_PUBLISHABLE_KEY";
-const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+/* ===== Supabase ===== */
+const SUPABASE_URL = "https://ntyqqenchkojmhfyaegx.supabase.co";
+const SUPABASE_ANON_KEY = "PUT_YOUR_PUBLISHABLE_KEY_HERE";
 
-// ===== ตั้งค่าเวลา =====
-const SHOW_TIME = 30000; // 30 วินาที (เปลี่ยนเป็น 60000 = 1 นาที)
-const CHECK_INTERVAL = 1500;
+const supabase = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
-const waitingBox=document.getElementById("waitingBox");
-const img=document.getElementById("signature");
+const bucket = "signatures";
+const showTime = 45000; // 45 วินาที
 
-let lastId=null;
-let hideTimer=null;
+let images = [];
+let index = 0;
 
-/* โหมดรอ */
-function showWaiting(){
-  waitingBox.style.display="block";
-  img.style.display="none";
+/* ===== Load images ===== */
+async function loadImages(){
+  const { data, error } = await supabase
+    .storage
+    .from(bucket)
+    .list("", { limit: 100, sortBy: { column: "created_at", order: "asc" } });
+
+  if(error) return;
+
+  images = data.map(file =>
+    supabase.storage.from(bucket).getPublicUrl(file.name).data.publicUrl
+  );
 }
 
-/* แสดงลายเซ็น */
-function showSignature(url){
-  waitingBox.style.display="none";
-  img.style.display="block";
-  img.src=url;
+/* ===== Display loop ===== */
+async function startDisplay(){
+  await loadImages();
 
-  img.classList.remove("new-signature");
-  void img.offsetWidth;
-  img.classList.add("new-signature");
-
-  // ตั้งเวลาซ่อน
-  if(hideTimer) clearTimeout(hideTimer);
-  hideTimer=setTimeout(showWaiting, SHOW_TIME);
-}
-
-/* ตรวจลายเซ็นใหม่ */
-async function checkSignature(){
-  const { data } = await supabase
-    .from("signatures")
-    .select("id,image_url")
-    .order("created_at",{ascending:false})
-    .limit(1);
-
-  if(!data || data.length===0){
-    showWaiting();
+  if(images.length === 0){
+    document.getElementById("text").style.display="block";
+    document.getElementById("imageBox").style.display="none";
     return;
   }
 
-  if(data[0].id!==lastId){
-    lastId=data[0].id;
-    showSignature(data[0].image_url);
-  }
+  document.getElementById("text").style.display="none";
+  document.getElementById("imageBox").style.display="block";
+
+  document.getElementById("image").src = images[index];
+  index = (index + 1) % images.length;
 }
 
-/* เริ่มต้น */
-showWaiting();
-setInterval(checkSignature, CHECK_INTERVAL);
+/* ===== Auto refresh ===== */
+startDisplay();
+setInterval(startDisplay, showTime);
+
+// เช็คไฟล์ใหม่ทุก 10 วิ
+setInterval(loadImages, 10000);
 </script>
 
 </body>
