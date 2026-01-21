@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Bene Wedding Project</title>
+<title>BENE Wedding Project</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://fonts.googleapis.com/css?family=Sarabun&display=swap" rel="stylesheet">
@@ -10,17 +10,20 @@
 <style>
 body{
   font-family:Sarabun,sans-serif;
-  background:#fafafa;
+  background:#faf7f0;
   text-align:center;
   margin:0;
 }
 h1{ margin:16px 0 4px; }
+p{ margin:0 0 10px; }
+
 canvas{
-  border:2px solid #000;
+  border:2px solid #333;
   background:#fff;
   touch-action:none;
   cursor:crosshair;
 }
+
 .controls{ margin:10px 0; }
 button,select{
   font-size:16px;
@@ -58,70 +61,94 @@ button,select{
   <button onclick="saveCanvas()">ส่งขึ้นจอ</button>
 </div>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// 🔑 Supabase
-const SUPABASE_URL="https://ntyqqenchkojmhfyaegx.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_NRo3h3EI9GBoZQJ5n4gOSg_waxkqG-N";
-const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+/* ================= Supabase ================= */
+const SUPABASE_URL = "https://ntyqqenchkojmhfyaegx.supabase.co";
+const SUPABASE_ANON_KEY = "PUT_YOUR_PUBLISHABLE_KEY_HERE";
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ===== Canvas =====
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
-const colorEl=document.getElementById("color");
-const widthEl=document.getElementById("width");
+/* ================= Canvas ================= */
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const colorEl = document.getElementById("color");
+const widthEl = document.getElementById("width");
 
-let drawing=false;
-let lastX=0,lastY=0;
+let drawing = false;
+let lastX = 0;
+let lastY = 0;
 
-// Pointer Events
-canvas.addEventListener("pointerdown",e=>{
-  drawing=true;
-  canvas.setPointerCapture(e.pointerId);
-  lastX=e.offsetX;
-  lastY=e.offsetY;
+/* ===== Mouse ===== */
+canvas.addEventListener("mousedown", e => {
+  drawing = true;
+  lastX = e.offsetX;
+  lastY = e.offsetY;
 });
 
-canvas.addEventListener("pointermove",e=>{
+canvas.addEventListener("mousemove", e => {
   if(!drawing) return;
+  draw(e.offsetX, e.offsetY);
+});
 
-  ctx.strokeStyle=colorEl.value;
-  ctx.lineWidth=widthEl.value;
-  ctx.lineCap="round";
-  ctx.lineJoin="round";
+window.addEventListener("mouseup", () => drawing = false);
+
+/* ===== Touch ===== */
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault();
+  drawing = true;
+  const t = e.touches[0];
+  const r = canvas.getBoundingClientRect();
+  lastX = t.clientX - r.left;
+  lastY = t.clientY - r.top;
+});
+
+canvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if(!drawing) return;
+  const t = e.touches[0];
+  const r = canvas.getBoundingClientRect();
+  draw(t.clientX - r.left, t.clientY - r.top);
+});
+
+canvas.addEventListener("touchend", () => drawing = false);
+
+/* ===== Draw ===== */
+function draw(x,y){
+  ctx.strokeStyle = colorEl.value;
+  ctx.lineWidth = widthEl.value;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
   ctx.beginPath();
   ctx.moveTo(lastX,lastY);
-  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.lineTo(x,y);
   ctx.stroke();
 
-  lastX=e.offsetX;
-  lastY=e.offsetY;
-});
+  lastX = x;
+  lastY = y;
+}
 
-canvas.addEventListener("pointerup",()=>drawing=false);
-canvas.addEventListener("pointercancel",()=>drawing=false);
-canvas.addEventListener("pointerleave",()=>drawing=false);
-
-// ล้าง
+/* ===== Clear ===== */
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// บันทึก
+/* ===== Save ===== */
 async function saveCanvas(){
-  const blob=await new Promise(r=>canvas.toBlob(r,"image/png"));
-  const filename=`signature_${Date.now()}.png`;
+  const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
+  const filename = `signature_${Date.now()}.png`;
 
-  await supabase.storage.from("signatures")
-    .upload(filename,blob,{upsert:true});
+  await supabase.storage
+    .from("signatures")
+    .upload(filename, blob, { upsert:true });
 
   const { data } = supabase.storage
     .from("signatures")
     .getPublicUrl(filename);
 
   await supabase.from("signatures").insert({
-    image_url:data.publicUrl
+    image_url: data.publicUrl
   });
 
   clearCanvas();
