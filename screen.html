@@ -1,141 +1,148 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<title>Wedding Wishes Display</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BENE Wedding – Display</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Kanit:400,600&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --cream:#f6f1e9;
-  --brown:#5b4636;
-  --gold:#b08a5a;
+  --cream:#f5efe6;
+  --brown:#7a5c42;
+  --accent:#b89b7b;
 }
-
-*{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family:Sarabun,sans-serif;
   background:var(--cream);
-  color:var(--brown);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+  font-family:'Kanit',sans-serif;
+  overflow:hidden;
 }
 
-.wrapper{
-  width:100%;
-  height:100%;
-  padding:30px;
+/* ข้อความรอ */
+#waiting{
+  position:absolute;
+  inset:0;
   display:flex;
+  align-items:center;
+  justify-content:center;
   flex-direction:column;
-  justify-content:center;
-  align-items:center;
+  color:#fff;
+  background:linear-gradient(
+    rgba(184,155,123,.85),
+    rgba(122,92,66,.85)
+  );
+  animation:fade 3s ease-in-out infinite;
 }
 
-.message{
-  font-size:48px;
-  font-weight:600;
-  letter-spacing:2px;
-  text-align:center;
+#waiting h1{
+  font-size:56px;
+  margin:0;
+  white-space:nowrap;
 }
 
-.image-box{
-  max-width:90%;
-  max-height:80%;
+#waiting p{
+  margin-top:12px;
+  font-size:20px;
+  opacity:.9;
+}
+
+/* ลายเซ็น */
+#signature{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  max-width:85%;
+  max-height:85%;
   display:none;
+  animation:showUp .8s ease;
 }
 
-.image-box img{
-  max-width:100%;
-  max-height:100%;
-  border-radius:24px;
-  box-shadow:0 20px 40px rgba(0,0,0,.15);
-}
-
-footer{
-  position:fixed;
+/* เครดิต */
+#credit{
+  position:absolute;
   bottom:20px;
-  font-size:14px;
-  opacity:.6;
+  right:30px;
+  font-size:16px;
+  color:rgba(0,0,0,.4);
+}
+
+/* animations */
+@keyframes fade{
+  0%{opacity:.4}
+  50%{opacity:1}
+  100%{opacity:.4}
+}
+
+@keyframes showUp{
+  from{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.95);
+  }
+  to{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+  }
 }
 </style>
 </head>
 <body>
 
-<div class="wrapper">
-  <div id="text" class="message">
-    เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว
-  </div>
-
-  <div id="imageBox" class="image-box">
-    <img id="image" src="">
-  </div>
+<!-- WAITING -->
+<div id="waiting">
+  <h1>เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว</h1>
+  <p>ด้วยลายมือของคุณ</p>
 </div>
 
-<footer>
-  By BENE Wedding Project
-</footer>
+<!-- SIGNATURE -->
+<img id="signature">
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="credit">By BENE Wedding Project</div>
+
 <script>
-/* ===== Supabase ===== */
-const SUPABASE_URL = "https://ntyqqenchkojmhfyaegx.supabase.co";
-const SUPABASE_ANON_KEY = "PUT_YOUR_PUBLISHABLE_KEY_HERE";
+const waiting = document.getElementById("waiting");
+const img = document.getElementById("signature");
 
-const supabase = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+let lastImage = null;
+let showTimer = null;
 
-const bucket = "signatures";
-const showTime = 45000; // 45 วินาที
+// แสดงลายเซ็น
+function showSignature(src){
+  waiting.style.display="none";
+  img.src = src;
+  img.style.display="block";
 
-let images = [];
-let index = 0;
-
-/* ===== Load images ===== */
-async function loadImages(){
-  const { data, error } = await supabase
-    .storage
-    .from(bucket)
-    .list("", { limit: 100, sortBy: { column: "created_at", order: "asc" } });
-
-  if(error) return;
-
-  images = data.map(file =>
-    supabase.storage.from(bucket).getPublicUrl(file.name).data.publicUrl
-  );
+  clearTimeout(showTimer);
+  showTimer = setTimeout(showWaiting, 45000); // 45 วิ
 }
 
-/* ===== Display loop ===== */
-async function startDisplay(){
-  await loadImages();
+// กลับไปโหมดรอ
+function showWaiting(){
+  img.style.display="none";
+  waiting.style.display="flex";
+}
 
-  if(images.length === 0){
-    document.getElementById("text").style.display="block";
-    document.getElementById("imageBox").style.display="none";
+// ตรวจทุก 1 วิ
+setInterval(()=>{
+  const imgData = localStorage.getItem("lastSignature");
+
+  if(!imgData){
+    showWaiting();
+    lastImage = null;
     return;
   }
 
-  document.getElementById("text").style.display="none";
-  document.getElementById("imageBox").style.display="block";
+  if(imgData !== lastImage){
+    lastImage = imgData;
+    showSignature(imgData);
+  }
+},1000);
 
-  document.getElementById("image").src = images[index];
-  index = (index + 1) % images.length;
-}
-
-/* ===== Auto refresh ===== */
-startDisplay();
-setInterval(startDisplay, showTime);
-
-// เช็คไฟล์ใหม่ทุก 10 วิ
-setInterval(loadImages, 10000);
+// เริ่มต้น
+showWaiting();
 </script>
 
 </body>
