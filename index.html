@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>BENE Wedding – Write</title>
+<meta charset="utf-8">
+<title>เขียนคำอวยพร</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://fonts.googleapis.com/css?family=Sarabun&display=swap" rel="stylesheet">
@@ -14,14 +14,13 @@ body{
   text-align:center;
   margin:0;
 }
-h1{ margin:16px 0 6px; }
-
+h1{ margin:16px 0 4px; }
 canvas{
   border:2px solid #000;
   background:#fff;
   touch-action:none;
+  cursor:crosshair;
 }
-
 .controls{ margin:10px 0; }
 button,select{
   font-size:16px;
@@ -33,7 +32,7 @@ button,select{
 <body>
 
 <h1>เขียนคำอวยพรให้บ่าวสาว</h1>
-<p>เมาส์ / ปากกา / นิ้ว</p>
+<p>ใช้ปากกา / นิ้ว / เมาส์ ได้ทั้งหมด</p>
 
 <canvas id="canvas" width="900" height="600"></canvas>
 
@@ -56,97 +55,81 @@ button,select{
 
 <div class="controls">
   <button onclick="clearCanvas()">ล้าง</button>
-  <button onclick="saveCanvas()">ส่ง</button>
+  <button onclick="saveCanvas()">ส่งขึ้นจอ</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = "https://ntyqqenchkojmhfyaegx.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NRo3h3EI9GBoZQJ5n4gOSg_waxkqG-N";
+
+const supabase = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+// ===== Canvas =====
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const colorEl = document.getElementById("color");
-const widthEl = document.getElementById("width");
+const color = document.getElementById("color");
+const width = document.getElementById("width");
 
-let drawing = false;
-let lastX = 0;
-let lastY = 0;
+let drawing=false;
+let lastX=0,lastY=0;
 
-/* ===== คำนวณตำแหน่ง ===== */
-function getXY(e){
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: (e.clientX - rect.left),
-    y: (e.clientY - rect.top)
-  };
-}
-
-/* ===== MOUSE ===== */
-canvas.addEventListener("mousedown", e => {
-  drawing = true;
-  const pos = getXY(e);
-  lastX = pos.x;
-  lastY = pos.y;
+// Pointer Events
+canvas.addEventListener("pointerdown",e=>{
+  drawing=true;
+  canvas.setPointerCapture(e.pointerId);
+  lastX=e.offsetX;
+  lastY=e.offsetY;
 });
 
-canvas.addEventListener("mousemove", e => {
+canvas.addEventListener("pointermove",e=>{
   if(!drawing) return;
-  const pos = getXY(e);
 
-  ctx.strokeStyle = colorEl.value;
-  ctx.lineWidth = widthEl.value;
-  ctx.lineCap = "round";
+  ctx.strokeStyle = color.value;
+  ctx.lineWidth = width.value;
+  ctx.lineCap="round";
+  ctx.lineJoin="round";
 
   ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(pos.x, pos.y);
+  ctx.moveTo(lastX,lastY);
+  ctx.lineTo(e.offsetX,e.offsetY);
   ctx.stroke();
 
-  lastX = pos.x;
-  lastY = pos.y;
+  lastX=e.offsetX;
+  lastY=e.offsetY;
 });
 
-window.addEventListener("mouseup", ()=> drawing=false);
+canvas.addEventListener("pointerup",()=>drawing=false);
+canvas.addEventListener("pointercancel",()=>drawing=false);
+canvas.addEventListener("pointerleave",()=>drawing=false);
 
-/* ===== TOUCH ===== */
-canvas.addEventListener("touchstart", e => {
-  e.preventDefault();
-  drawing = true;
-  const t = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  lastX = t.clientX - rect.left;
-  lastY = t.clientY - rect.top;
-});
-
-canvas.addEventListener("touchmove", e => {
-  if(!drawing) return;
-  e.preventDefault();
-
-  const t = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const x = t.clientX - rect.left;
-  const y = t.clientY - rect.top;
-
-  ctx.strokeStyle = colorEl.value;
-  ctx.lineWidth = widthEl.value;
-  ctx.lineCap = "round";
-
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.stroke();
-
-  lastX = x;
-  lastY = y;
-});
-
-canvas.addEventListener("touchend", ()=> drawing=false);
-
-/* ===== CLEAR ===== */
+// ล้าง
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-/* ===== SAVE (เทสก่อน) ===== */
-function saveCanvas(){
-  alert("เขียนติดแล้ว ✔ ต่อไปผูก Supabase");
+// บันทึก
+async function saveCanvas(){
+  const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
+  const filename = `signature_${Date.now()}.png`;
+
+  await supabase.storage
+    .from("signatures")
+    .upload(filename, blob, { upsert:true });
+
+  const { data } = supabase.storage
+    .from("signatures")
+    .getPublicUrl(filename);
+
+  await supabase.from("signatures").insert({
+    image_url: data.publicUrl
+  });
+
+  clearCanvas();
+  alert("ส่งลายเซ็นเรียบร้อย ✍️");
 }
 </script>
 
