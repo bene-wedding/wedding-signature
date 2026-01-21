@@ -36,13 +36,13 @@ header {
     border-radius: 16px;
     padding: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    cursor: pointer;
 }
 
 .card img {
     width: 100%;
     border-radius: 12px;
     background: #fafafa;
+    cursor: pointer;
 }
 
 .time {
@@ -50,6 +50,34 @@ header {
     margin-top: 8px;
     font-size: 13px;
     color: #666;
+}
+
+/* ปุ่ม */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.actions button {
+    flex: 1;
+    margin: 0 4px;
+    padding: 6px 0;
+    border: none;
+    border-radius: 20px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-download {
+    background: #28a745;
+    color: #fff;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: #fff;
 }
 
 /* Modal */
@@ -83,22 +111,22 @@ header {
 </div>
 
 <script>
+const STORAGE_KEY = "weddingSignatures";
 const gallery = document.getElementById("gallery");
 const modal = document.getElementById("modal");
 const modalImg = document.getElementById("modalImg");
 
 // โหลดลายเซ็นทั้งหมด
 function loadGallery() {
-    const list = JSON.parse(localStorage.getItem("weddingSignatures")) || [];
+    const list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     gallery.innerHTML = "";
 
-    list.forEach(item => {
+    list.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "card";
 
         const img = document.createElement("img");
         img.src = item.img;
-
         img.onclick = () => {
             modalImg.src = item.img;
             modal.style.display = "flex";
@@ -108,10 +136,45 @@ function loadGallery() {
         time.className = "time";
         time.innerText = item.time;
 
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const btnDownload = document.createElement("button");
+        btnDownload.className = "btn-download";
+        btnDownload.innerText = "ดาวน์โหลด";
+        btnDownload.onclick = () => downloadImage(item.img, index);
+
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "btn-delete";
+        btnDelete.innerText = "ลบ";
+        btnDelete.onclick = () => deleteImage(index);
+
+        actions.appendChild(btnDownload);
+        actions.appendChild(btnDelete);
+
         card.appendChild(img);
         card.appendChild(time);
+        card.appendChild(actions);
         gallery.appendChild(card);
     });
+}
+
+// ดาวน์โหลดรูป
+function downloadImage(dataUrl, index) {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `signature_${index + 1}.png`;
+    a.click();
+}
+
+// ลบรูป
+function deleteImage(index) {
+    if (!confirm("ต้องการลบลายเซ็นนี้ใช่หรือไม่?")) return;
+
+    const list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    list.splice(index, 1);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    loadGallery();
 }
 
 loadGallery();
