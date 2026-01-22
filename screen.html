@@ -49,6 +49,13 @@ body{
   opacity:.9;
 }
 
+/* เวลา */
+#clock{
+  margin-top:6px;
+  font-size:18px;
+  opacity:.8;
+}
+
 /* ลายเซ็น */
 #signature{
   position:absolute;
@@ -95,6 +102,7 @@ body{
 <div id="waiting">
   <h1>เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว</h1>
   <p>ด้วยลายมือของคุณ</p>
+  <div id="clock"></div>
 </div>
 
 <!-- SIGNATURE -->
@@ -105,11 +113,23 @@ body{
 <script>
 const waiting = document.getElementById("waiting");
 const img = document.getElementById("signature");
+const clockEl = document.getElementById("clock");
 
 let lastImage = null;
 let showTimer = null;
 
-// แสดงลายเซ็น
+/* ===== เวลา ===== */
+function updateClock(){
+  const now = new Date();
+  clockEl.textContent = now.toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* แสดงลายเซ็น */
 function showSignature(src){
   waiting.style.display="none";
   img.src = src;
@@ -119,13 +139,13 @@ function showSignature(src){
   showTimer = setTimeout(showWaiting, 45000); // 45 วิ
 }
 
-// กลับไปโหมดรอ
+/* กลับไปโหมดรอ */
 function showWaiting(){
   img.style.display="none";
   waiting.style.display="flex";
 }
 
-// ตรวจทุก 1 วิ
+/* ตรวจทุก 1 วิ */
 setInterval(()=>{
   const imgData = localStorage.getItem("lastSignature");
 
@@ -141,7 +161,7 @@ setInterval(()=>{
   }
 },1000);
 
-// เริ่มต้น
+/* เริ่มต้น */
 showWaiting();
 </script>
 
