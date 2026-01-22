@@ -115,6 +115,7 @@ button:hover{
 </div>
 
 <div class="controls">
+  <button class="secondary" onclick="undo()">ย้อนกลับ</button>
   <button class="secondary" onclick="clearCanvas()">ล้าง</button>
   <button onclick="saveCanvas()">บันทึกลายเซ็น</button>
 </div>
@@ -132,11 +133,16 @@ const widthEl = document.getElementById("width");
 let drawing = false;
 let lastX = 0;
 let lastY = 0;
+let history = [];
 
 /* ===== Pointer Events (เขียนติด 100%) ===== */
 canvas.addEventListener("pointerdown", e => {
   drawing = true;
   canvas.setPointerCapture(e.pointerId);
+
+  // เก็บสถานะก่อนเริ่มเขียน (UNDO)
+  history.push(canvas.toDataURL());
+
   lastX = e.offsetX;
   lastY = e.offsetY;
 });
@@ -162,16 +168,29 @@ canvas.addEventListener("pointermove", e => {
   canvas.addEventListener(ev,()=>drawing=false);
 });
 
+/* ===== UNDO ===== */
+function undo(){
+  if(history.length === 0) return;
+
+  const img = new Image();
+  img.src = history.pop();
+  img.onload = () => {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0);
+  };
+}
+
 /* ===== Clear ===== */
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
+  history = [];
 }
 
 /* ===== Save (โหมดเครื่องเดียว) ===== */
 function saveCanvas(){
   const img = canvas.toDataURL("image/png");
 
-  // เก็บไว้ local ก่อน (เอาไปใช้หน้าแสดงผลได้)
+  // เก็บไว้ local (เอาไปใช้หน้าแสดงผล)
   localStorage.setItem("lastSignature", img);
 
   alert("บันทึกลายเซ็นเรียบร้อย ✍️");
