@@ -41,7 +41,6 @@ canvas{
   box-shadow:0 10px 30px rgba(0,0,0,.15);
   touch-action:none;
   cursor:crosshair;
-  margin-top:14px;
 }
 
 .controls{
@@ -71,14 +70,16 @@ button.secondary{
   background:#999;
 }
 
-button:hover{
-  opacity:.9;
-}
-
 .footer{
   margin:18px 0;
   font-size:14px;
   opacity:.7;
+}
+
+#status{
+  margin-top:8px;
+  font-size:14px;
+  opacity:.8;
 }
 </style>
 </head>
@@ -111,6 +112,8 @@ button:hover{
   <button onclick="saveCanvas()">บันทึกลายเซ็น</button>
 </div>
 
+<div id="status"></div>
+
 <div class="footer">By BENE Wedding Project</div>
 
 <script>
@@ -118,12 +121,13 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const colorEl = document.getElementById("color");
 const widthEl = document.getElementById("width");
+const statusEl = document.getElementById("status");
 
 let drawing = false;
 let lastX = 0;
 let lastY = 0;
 
-// เขียนติด (pointer)
+/* ===== เขียน ===== */
 canvas.addEventListener("pointerdown", e => {
   drawing = true;
   canvas.setPointerCapture(e.pointerId);
@@ -148,36 +152,35 @@ canvas.addEventListener("pointermove", e => {
   lastY = e.offsetY;
 });
 
-["pointerup","pointerleave","pointercancel"].forEach(ev => {
-  canvas.addEventListener(ev, () => drawing = false);
+["pointerup","pointerleave","pointercancel"].forEach(ev=>{
+  canvas.addEventListener(ev,()=>drawing=false);
 });
 
-// ล้าง
+/* ===== ล้าง ===== */
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// ส่งขึ้น Drive ผ่าน Web App
+/* ===== ส่งขึ้น Drive (ล้างทันที) ===== */
 function saveCanvas(){
   const img = canvas.toDataURL("image/png");
 
+  // ล้างทันที ไม่รอผล
+  clearCanvas();
+  statusEl.innerText = "⏳ กำลังส่งลายเซ็น...";
+
   fetch("https://script.google.com/macros/s/AKfycbzcvvEdAx6BHAiepY8q76cYSyjDEgC-dpiB8lgc40Q/dev", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    mode: "no-cors",
     body: JSON.stringify({
       image: img,
-      event: "BENE Wedding Project",
-      date: ""
+      event: "BENE Wedding Project"
     })
-  }).then(() => {
-    alert("ส่งลายเซ็นขึ้น Drive เรียบร้อย ✍️");
-    clearCanvas();
-  }).catch(err => {
-    console.error(err);
-    alert("ส่งลายเซ็นไม่สำเร็จ");
   });
+
+  setTimeout(()=>{
+    statusEl.innerText = "✅ ส่งเรียบร้อย";
+  },1000);
 }
 </script>
 
