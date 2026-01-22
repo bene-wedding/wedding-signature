@@ -135,12 +135,11 @@ let lastX = 0;
 let lastY = 0;
 let history = [];
 
-/* ===== Pointer Events (เขียนติด 100%) ===== */
+/* ===== Pointer Events ===== */
 canvas.addEventListener("pointerdown", e => {
   drawing = true;
   canvas.setPointerCapture(e.pointerId);
 
-  // เก็บสถานะก่อนเริ่มเขียน (UNDO)
   history.push(canvas.toDataURL());
 
   lastX = e.offsetX;
@@ -180,18 +179,33 @@ function undo(){
   };
 }
 
-/* ===== Clear ===== */
+/* ===== CLEAR ===== */
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   history = [];
 }
 
-/* ===== Save (โหมดเครื่องเดียว) ===== */
+/* ===== SAVE (Display + Gallery) ===== */
 function saveCanvas(){
   const img = canvas.toDataURL("image/png");
 
-  // เก็บไว้ local (เอาไปใช้หน้าแสดงผล)
+  /* สำหรับหน้าแสดงผล */
   localStorage.setItem("lastSignature", img);
+
+  /* สำหรับหน้า Gallery */
+  let gallery = JSON.parse(
+    localStorage.getItem("weddingGallery") || "[]"
+  );
+
+  gallery.push({
+    img: img,
+    time: new Date().toLocaleString("th-TH")
+  });
+
+  localStorage.setItem(
+    "weddingGallery",
+    JSON.stringify(gallery)
+  );
 
   alert("บันทึกลายเซ็นเรียบร้อย ✍️");
   clearCanvas();
