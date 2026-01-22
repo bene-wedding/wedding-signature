@@ -34,12 +34,6 @@ h1{
   opacity:.8;
 }
 
-/* canvas */
-.canvas-wrap{
-  display:flex;
-  justify-content:center;
-}
-
 canvas{
   background:#fff;
   border-radius:18px;
@@ -47,9 +41,9 @@ canvas{
   box-shadow:0 10px 30px rgba(0,0,0,.15);
   touch-action:none;
   cursor:crosshair;
+  margin-top:14px;
 }
 
-/* controls */
 .controls{
   margin:14px 0;
 }
@@ -93,9 +87,7 @@ button:hover{
 <h1>เขียนคำอวยพรให้บ่าวสาว</h1>
 <div class="subtitle">ใช้ปากกา / นิ้ว / เมาส์ ได้</div>
 
-<div class="canvas-wrap">
-  <canvas id="canvas" width="900" height="600"></canvas>
-</div>
+<canvas id="canvas" width="900" height="600"></canvas>
 
 <div class="controls">
   สี:
@@ -115,14 +107,11 @@ button:hover{
 </div>
 
 <div class="controls">
-  <button class="secondary" onclick="undo()">ย้อนกลับ</button>
   <button class="secondary" onclick="clearCanvas()">ล้าง</button>
   <button onclick="saveCanvas()">บันทึกลายเซ็น</button>
 </div>
 
-<div class="footer">
-  By BENE Wedding Project
-</div>
+<div class="footer">By BENE Wedding Project</div>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -133,15 +122,11 @@ const widthEl = document.getElementById("width");
 let drawing = false;
 let lastX = 0;
 let lastY = 0;
-let history = [];
 
-/* ===== Pointer Events ===== */
+// เขียนติด (pointer)
 canvas.addEventListener("pointerdown", e => {
   drawing = true;
   canvas.setPointerCapture(e.pointerId);
-
-  history.push(canvas.toDataURL());
-
   lastX = e.offsetX;
   lastY = e.offsetY;
 });
@@ -163,52 +148,36 @@ canvas.addEventListener("pointermove", e => {
   lastY = e.offsetY;
 });
 
-["pointerup","pointercancel","pointerleave"].forEach(ev=>{
-  canvas.addEventListener(ev,()=>drawing=false);
+["pointerup","pointerleave","pointercancel"].forEach(ev => {
+  canvas.addEventListener(ev, () => drawing = false);
 });
 
-/* ===== UNDO ===== */
-function undo(){
-  if(history.length === 0) return;
-
-  const img = new Image();
-  img.src = history.pop();
-  img.onload = () => {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(img,0,0);
-  };
-}
-
-/* ===== CLEAR ===== */
+// ล้าง
 function clearCanvas(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  history = [];
 }
 
-/* ===== SAVE (Display + Gallery) ===== */
+// ส่งขึ้น Drive ผ่าน Web App
 function saveCanvas(){
   const img = canvas.toDataURL("image/png");
 
-  /* สำหรับหน้าแสดงผล */
-  localStorage.setItem("lastSignature", img);
-
-  /* สำหรับหน้า Gallery */
-  let gallery = JSON.parse(
-    localStorage.getItem("weddingGallery") || "[]"
-  );
-
-  gallery.push({
-    img: img,
-    time: new Date().toLocaleString("th-TH")
+  fetch("https://script.google.com/macros/s/AKfycbzcvvEdAx6BHAiepY8q76cYSyjDEgC-dpiB8lgc40Q/dev", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      image: img,
+      event: "BENE Wedding Project",
+      date: ""
+    })
+  }).then(() => {
+    alert("ส่งลายเซ็นขึ้น Drive เรียบร้อย ✍️");
+    clearCanvas();
+  }).catch(err => {
+    console.error(err);
+    alert("ส่งลายเซ็นไม่สำเร็จ");
   });
-
-  localStorage.setItem(
-    "weddingGallery",
-    JSON.stringify(gallery)
-  );
-
-  alert("บันทึกลายเซ็นเรียบร้อย ✍️");
-  clearCanvas();
 }
 </script>
 
