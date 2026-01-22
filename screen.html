@@ -21,7 +21,7 @@ body{
   overflow:hidden;
 }
 
-/* ข้อความรอ */
+/* WAITING */
 #waiting{
   position:absolute;
   inset:0;
@@ -40,7 +40,6 @@ body{
 #waiting h1{
   font-size:56px;
   margin:0;
-  white-space:nowrap;
 }
 
 #waiting p{
@@ -49,14 +48,7 @@ body{
   opacity:.9;
 }
 
-/* เวลา */
-#clock{
-  margin-top:6px;
-  font-size:18px;
-  opacity:.8;
-}
-
-/* ลายเซ็น */
+/* SIGNATURE */
 #signature{
   position:absolute;
   top:50%;
@@ -68,7 +60,17 @@ body{
   animation:showUp .8s ease;
 }
 
-/* เครดิต */
+/* COUNTDOWN */
+#countdown{
+  position:absolute;
+  bottom:24px;
+  left:30px;
+  font-size:14px;
+  color:rgba(0,0,0,.45);
+  display:none;
+}
+
+/* CREDIT */
 #credit{
   position:absolute;
   bottom:20px;
@@ -102,50 +104,63 @@ body{
 <div id="waiting">
   <h1>เชิญเขียนคำอวยพรเจ้าบ่าวเจ้าสาว</h1>
   <p>ด้วยลายมือของคุณ</p>
-  <div id="clock"></div>
 </div>
 
 <!-- SIGNATURE -->
 <img id="signature">
+
+<!-- COUNTDOWN -->
+<div id="countdown">เปลี่ยนใน 30 วินาที</div>
 
 <div id="credit">By BENE Wedding Project</div>
 
 <script>
 const waiting = document.getElementById("waiting");
 const img = document.getElementById("signature");
-const clockEl = document.getElementById("clock");
+const countdownEl = document.getElementById("countdown");
 
 let lastImage = null;
 let showTimer = null;
-
-/* ===== เวลา ===== */
-function updateClock(){
-  const now = new Date();
-  clockEl.textContent = now.toLocaleTimeString("th-TH", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-setInterval(updateClock, 1000);
-updateClock();
+let countdownTimer = null;
+let seconds = 30;
 
 /* แสดงลายเซ็น */
 function showSignature(src){
-  waiting.style.display="none";
+  waiting.style.display = "none";
   img.src = src;
-  img.style.display="block";
+  img.style.display = "block";
+
+  startCountdown();
 
   clearTimeout(showTimer);
-  showTimer = setTimeout(showWaiting, 45000); // 45 วิ
+  showTimer = setTimeout(showWaiting, 30000);
 }
 
-/* กลับไปโหมดรอ */
+/* กลับหน้า WAITING */
 function showWaiting(){
-  img.style.display="none";
-  waiting.style.display="flex";
+  img.style.display = "none";
+  waiting.style.display = "flex";
+  countdownEl.style.display = "none";
+  clearInterval(countdownTimer);
 }
 
-/* ตรวจทุก 1 วิ */
+/* นับถอยหลัง */
+function startCountdown(){
+  seconds = 30;
+  countdownEl.style.display = "block";
+  countdownEl.textContent = `เปลี่ยนใน ${seconds} วินาที`;
+
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(()=>{
+    seconds--;
+    countdownEl.textContent = `เปลี่ยนใน ${seconds} วินาที`;
+    if(seconds <= 0){
+      clearInterval(countdownTimer);
+    }
+  },1000);
+}
+
+/* ตรวจข้อมูลทุก 1 วิ */
 setInterval(()=>{
   const imgData = localStorage.getItem("lastSignature");
 
