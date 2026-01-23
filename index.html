@@ -3,186 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BENE Wedding – เขียนคำอวยพร</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<title>Wedding Signature</title>
 
 <style>
-:root{
-  --cream:#f5efe6;
-  --brown:#7a5c42;
-  --accent:#b89b7b;
-}
-
 body{
-  margin:0;
-  font-family:'Sarabun',sans-serif;
-  background:var(--cream);
-  text-align:center;
-  color:var(--brown);
+    font-family: Arial, sans-serif;
+    background:#fafafa;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
-
-h1{
-  margin:20px 0 6px;
-  font-size:34px;
-  font-weight:600;
+.box{
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    width:100%;
+    max-width:400px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
-
-.subtitle{
-  font-size:16px;
-  margin-bottom:14px;
-  opacity:.8;
+input,textarea,button{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    font-size:16px;
 }
-
-canvas{
-  background:#fff;
-  border-radius:18px;
-  border:3px solid var(--accent);
-  box-shadow:0 10px 30px rgba(0,0,0,.15);
-  touch-action:none;
-  cursor:crosshair;
-}
-
-.controls{
-  margin:14px 0;
-}
-
-select,button{
-  font-size:16px;
-  padding:8px 14px;
-  border-radius:20px;
-  border:none;
-  margin:4px;
-}
-
-select{
-  background:#fff;
-  border:1px solid var(--accent);
-}
-
 button{
-  background:var(--brown);
-  color:#fff;
-  cursor:pointer;
-}
-
-button.secondary{
-  background:#999;
-}
-
-.footer{
-  margin:18px 0;
-  font-size:14px;
-  opacity:.7;
-}
-
-#status{
-  margin-top:8px;
-  font-size:14px;
-  opacity:.8;
+    background:#5a3e2b;
+    color:#fff;
+    border:none;
+    cursor:pointer;
 }
 </style>
 </head>
+
 <body>
+<div class="box">
+    <h2>เขียนข้อความแสดงความยินดี</h2>
 
-<h1>เขียนคำอวยพรให้บ่าวสาว</h1>
-<div class="subtitle">ใช้ปากกา / นิ้ว / เมาส์ ได้</div>
+    <input type="text" id="name" placeholder="ชื่อของคุณ" required>
+    <textarea id="message" rows="4" placeholder="ข้อความ..." required></textarea>
 
-<canvas id="canvas" width="900" height="600"></canvas>
-
-<div class="controls">
-  สี:
-  <select id="color">
-    <option value="#000000">ดำ</option>
-    <option value="#1e3a8a" selected>น้ำเงิน</option>
-    <option value="#b91c1c">แดง</option>
-    <option value="#166534">เขียว</option>
-  </select>
-
-  ความหนา:
-  <select id="width">
-    <option value="6">6</option>
-    <option value="8" selected>8</option>
-    <option value="12">12</option>
-  </select>
+    <button onclick="sendMessage()">ส่งข้อความ</button>
 </div>
-
-<div class="controls">
-  <button class="secondary" onclick="clearCanvas()">ล้าง</button>
-  <button onclick="saveCanvas()">บันทึกลายเซ็น</button>
-</div>
-
-<div id="status"></div>
-
-<div class="footer">By BENE Wedding Project</div>
 
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const colorEl = document.getElementById("color");
-const widthEl = document.getElementById("width");
-const statusEl = document.getElementById("status");
+function sendMessage(){
+    const name = document.getElementById("name").value.trim();
+    const message = document.getElementById("message").value.trim();
 
-let drawing = false;
-let lastX = 0;
-let lastY = 0;
+    if(!name || !message){
+        alert("กรุณากรอกข้อมูลให้ครบ");
+        return;
+    }
 
-/* ===== เขียน ===== */
-canvas.addEventListener("pointerdown", e => {
-  drawing = true;
-  canvas.setPointerCapture(e.pointerId);
-  lastX = e.offsetX;
-  lastY = e.offsetY;
-});
+    let data = JSON.parse(localStorage.getItem("weddingMessages")) || [];
 
-canvas.addEventListener("pointermove", e => {
-  if (!drawing) return;
+    data.push({
+        name: name,
+        message: message,
+        time: new Date().toLocaleString()
+    });
 
-  ctx.strokeStyle = colorEl.value;
-  ctx.lineWidth = widthEl.value;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+    localStorage.setItem("weddingMessages", JSON.stringify(data));
 
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(e.offsetX, e.offsetY);
-  ctx.stroke();
-
-  lastX = e.offsetX;
-  lastY = e.offsetY;
-});
-
-["pointerup","pointerleave","pointercancel"].forEach(ev=>{
-  canvas.addEventListener(ev,()=>drawing=false);
-});
-
-/* ===== ล้าง ===== */
-function clearCanvas(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-}
-
-/* ===== ส่งขึ้น Drive (ล้างทันที) ===== */
-function saveCanvas(){
-  const img = canvas.toDataURL("image/png");
-
-  // ล้างทันที ไม่รอผล
-  clearCanvas();
-  statusEl.innerText = "⏳ กำลังส่งลายเซ็น...";
-
-  fetch("https://script.google.com/macros/s/AKfycbzcvvEdAx6BHAiepY8q76cYSyjDEgC-dpiB8lgc40Q/dev", {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      image: img,
-      event: "BENE Wedding Project"
-    })
-  });
-
-  setTimeout(()=>{
-    statusEl.innerText = "✅ ส่งเรียบร้อย";
-  },1000);
+    window.location.href = "gallery.html";
 }
 </script>
-
 </body>
 </html>
